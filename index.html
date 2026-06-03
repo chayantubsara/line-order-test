@@ -90,7 +90,7 @@
 
 <div class="loader-screen" id="mainLoader">
   <div class="spinner"></div>
-  <p style="color: #757575; font-size: 14px;">กำลังโหลดร้านค้า...</p>
+  <p style="color: #757575; font-size: 14px;" id="loadingText">กำลังโหลดร้านค้า...</p>
 </div>
 
 <!-- Navbar -->
@@ -195,10 +195,24 @@
 
   async function initializeApp() {
     try {
-      const [liffInit, itemsResponse] = await Promise.all([
-        liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true }),
-        fetch(GAS_API_URL + '?action=getItems').then(res => res.json())
-      ]);
+      // โหลด LIFF ควบคู่
+      const liffInit = liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+      
+      let itemsResponse = { success: false, data: [] };
+      
+      // ดักจับ Error CORS ตอน Fetch ข้อมูลแยกต่างหาก
+      try {
+        const res = await fetch(GAS_API_URL + '?action=getItems', {
+          method: 'GET',
+          redirect: 'follow'
+        });
+        itemsResponse = await res.json();
+      } catch (apiError) {
+        console.error("CORS Error เกิดจาก GAS ปฏิเสธการเข้าถึง:", apiError);
+        alert("❌ ดึงข้อมูลสินค้าไม่ได้ (CORS Blocked)\\n\\nเพื่อแก้ไขปัญหานี้ กรุณากลับไปที่ Google Apps Script:\\n\\n1. ต้องกด 'เรียกใช้' ฟังก์ชัน setupSheets 1 ครั้ง เพื่อยินยอมสิทธิ์บัญชีให้เรียบร้อยก่อน\\n2. ตอน Deploy (การทำให้ใช้งานได้) -> ต้องเลือกสิทธิ์ 'ผู้มีสิทธิ์เข้าถึง' เป็น 'ทุกคน (Anyone)' เท่านั้น");
+      }
+
+      await liffInit;
 
       if (liff.isLoggedIn()) {
         const profile = await liff.getProfile();
@@ -215,10 +229,10 @@
         itemsData = itemsResponse.data;
         renderCatalog();
       } else {
-        document.getElementById('courseCatalog').innerHTML = '<p style="grid-column: span 2; text-align:center; color:#999; padding:20px;">ไม่มีสินค้าจำหน่าย</p>';
+        document.getElementById('courseCatalog').innerHTML = '<p style="grid-column: span 2; text-align:center; color:#999; padding:20px;">ไม่มีสินค้าจำหน่าย (หรือเชื่อมต่อ Database ไม่สำเร็จ)</p>';
       }
     } catch (error) {
-      console.error(error);
+      console.error("General Error:", error);
     } finally {
       document.getElementById('mainLoader').style.display = 'none';
       document.getElementById('appContainer').style.display = 'block';
@@ -338,8 +352,11 @@
 
     try {
       const res = await fetch(GAS_API_URL, {
-        method:  'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain' },
-        body:    JSON.stringify(payload)
+        method:  'POST', 
+        mode: 'cors', 
+        headers: { 'Content-Type': 'text/plain' },
+        body:    JSON.stringify(payload),
+        redirect: 'follow'
       });
       const result = await res.json();
 
