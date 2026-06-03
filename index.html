@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>สั่งซื้อสินค้า</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    :root { --primary: #FF6B35; --primary-dark: #e55a25; --success: #4CAF50; --bg: #f5f5f5; --card: #ffffff; --text: #333333; --gray: #888888; --border: #e0e0e0; --radius: 12px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); min-height: 100vh; padding: 10px 12px; color: var(--text); font-size: 16px; -webkit-text-size-adjust: 100%; }
+    .wrapper { max-width: 420px; margin: 0 auto; display: none; }
+    #liffLoading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .spinner-large { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+    .header { background: #FF6B35; border-radius: var(--radius); padding: 20px 16px; text-align: center; margin-bottom: 12px; color: white; }
+    .header h1 { font-size: 18px; margin-bottom: 4px; font-weight: 600; }
+    .header p  { font-size: 12px; opacity: 0.9; }
+    .card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 0.5px solid var(--border); }
+    .card h2 { font-size: 14px; color: var(--primary); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid #fff3ee; font-weight: 600; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 12px; color: var(--gray); margin-bottom: 5px; font-weight: 500; }
+    .required::after { content: ' *'; color: var(--primary); }
+    input, select, textarea { width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 15px; color: var(--text); background: white; -webkit-appearance: none; appearance: none; transition: border-color 0.2s; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,107,53,0.1); }
+    textarea { resize: vertical; min-height: 72px; }
+    .summary-box { background: #fff8f5; border: 1.5px solid #ffe0d0; border-radius: 10px; padding: 13px; margin-bottom: 12px; }
+    .summary-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; color: var(--gray); }
+    .summary-total { display: flex; justify-content: space-between; font-size: 17px; font-weight: bold; color: var(--primary); padding-top: 8px; border-top: 1px dashed var(--border); margin-top: 5px; }
+    .btn-submit { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    .btn-submit:active   { background: var(--primary-dark); }
+    .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+    .status { display: none; padding: 12px; border-radius: 10px; text-align: center; font-size: 14px; margin-top: 10px; }
+    .status.error { display: block; background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+    .success-screen { display: none; text-align: center; padding: 32px 16px; background: var(--card); border-radius: var(--radius); }
+    .success-screen .icon { font-size: 52px; margin-bottom: 12px; }
+    .success-screen h2 { color: var(--success); margin-bottom: 8px; }
+    .success-screen p  { color: var(--gray); font-size: 14px; margin-bottom: 16px; line-height: 1.5; }
+    .order-id { background: #e8f5e9; color: #2e7d32; padding: 8px 18px; border-radius: 20px; font-size: 16px; font-weight: bold; display: inline-block; margin: 10px 0; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div id="liffLoading">
+  <div class="spinner-large"></div>
+  <p id="loadingMsg" style="margin-top:16px; color:#888;">กำลังตรวจสอบระบบ Login...</p>
+</div>
+
+<div class="wrapper" id="mainWrapper">
+  <div class="header">
+    <h1>🛒 สั่งซื้อสินค้า</h1>
+    <p>กรอกข้อมูลให้ครบแล้วกดสั่งซื้อได้เลย</p>
+  </div>
+
+  <div id="formSection">
+    <div class="card">
+      <h2>👤 ข้อมูลผู้สั่งซื้อ</h2>
+      <div class="form-group">
+        <label class="required">ชื่อ-นามสกุล</label>
+        <input type="text" id="name" placeholder="กรอกชื่อ-นามสกุล" autocomplete="name" maxlength="100">
+      </div>
+      <div class="form-group">
+        <label class="required">เบอร์โทรศัพท์</label>
+        <input type="tel" id="phone" placeholder="0812345678 (ตัวเลข 9-10 หลัก)" autocomplete="tel" inputmode="numeric" maxlength="10">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📦 รายการสินค้า</h2>
+      <div class="form-group">
+        <label class="required">เลือกสินค้า</label>
+        <select id="product">
+          <option value="">-- เลือกสินค้า --</option>
+          <option value="สินค้า A" data-price="299">สินค้า A — 299 บาท</option>
+          <option value="สินค้า B" data-price="499">สินค้า B — 499 บาท</option>
+          <option value="สินค้า C" data-price="799">สินค้า C — 799 บาท</option>
+          <option value="สินค้า D" data-price="1290">สินค้า D — 1,290 บาท</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="required">จำนวน</label>
+        <input type="number" id="qty" value="1" min="1" max="99" inputmode="numeric">
+      </div>
+    </div>
+
+    <div class="summary-box">
+      <div class="summary-row">
+        <span>ราคาต่อชิ้น</span>
+        <span id="unitPrice">0 บาท</span>
+      </div>
+      <div class="summary-row">
+        <span>จำนวน</span>
+        <span id="qtyDisplay">0 ชิ้น</span>
+      </div>
+      <div class="summary-total">
+        <span>ยอดรวม</span>
+        <span id="totalPrice">0 บาท</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📍 ที่อยู่จัดส่ง</h2>
+      <div class="form-group">
+        <label class="required">ที่อยู่จัดส่ง</label>
+        <textarea id="address" placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์" autocomplete="street-address" maxlength="500"></textarea>
+      </div>
+      <div class="form-group">
+        <label>หมายเหตุ (ถ้ามี)</label>
+        <input type="text" id="note" placeholder="เช่น ฝากไว้หน้าประตู" maxlength="200">
+      </div>
+    </div>
+
+    <button class="btn-submit" id="submitBtn">✅ ยืนยันสั่งซื้อ</button>
+    <div id="statusMsg" class="status"></div>
+  </div>
+
+  <div class="success-screen" id="successScreen">
+    <div class="icon">🎉</div>
+    <h2>สั่งซื้อสำเร็จแล้ว!</h2>
+    <p id="successDesc">เราได้รับออเดอร์ของคุณเรียบร้อยแล้ว</p>
+    <div class="order-id" id="orderIdDisplay"></div>
+  </div>
+</div>
+
+<script>
+  // ========================================================
+  // ⚠️ 1. เอา Web App URL จาก GAS ที่ Deploy ล่าสุดมาใส่ตรงนี้
+  // ========================================================
+  const GAS_API_URL = 'https://script.google.com/macros/s/YOUR_WEB_APP_ID/exec'; 
+  const LIFF_ID     = '2010267659-SxGeiSVp';
+
+  const PRICE_MAP = {
+    'สินค้า A': 299,
+    'สินค้า B': 499,
+    'สินค้า C': 799,
+    'สินค้า D': 1290,
+  };
+
+  let currentUserId = '';
+
+  async function initLIFF() {
+    try {
+      // โหมดบังคับ Login
+      await liff.init({ 
+        liffId: LIFF_ID,
+        withLoginOnExternalBrowser: true 
+      });
+
+      if (liff.isLoggedIn()) {
+        const profile = await liff.getProfile();
+        currentUserId = profile.userId;
+        document.getElementById('name').value = profile.displayName;
+      } else {
+        liff.login();
+      }
+    } catch (err) {
+      document.getElementById('loadingMsg').innerHTML = "<span style='color:red;'>เชื่อมต่อ LINE ล้มเหลว โปรดตรวจสอบ LIFF ID</span>";
+      console.error(err);
+    } finally {
+      document.getElementById('liffLoading').style.display = 'none';
+      document.getElementById('mainWrapper').style.display = 'block';
+    }
+  }
+
+  initLIFF();
+
+  function updatePrice() {
+    const select  = document.getElementById('product');
+    const qty     = parseInt(document.getElementById('qty').value) || 0;
+    const product = select.value;
+    const price   = PRICE_MAP[product] || 0;
+    const total   = price * qty;
+    document.getElementById('unitPrice').textContent  = price.toLocaleString() + ' บาท';
+    document.getElementById('qtyDisplay').textContent = qty + ' ชิ้น';
+    document.getElementById('totalPrice').textContent = total.toLocaleString() + ' บาท';
+  }
+  document.getElementById('product').addEventListener('change', updatePrice);
+  document.getElementById('qty').addEventListener('input', updatePrice);
+
+  async function submitOrder() {
+    const name    = document.getElementById('name').value.trim();
+    const phone   = document.getElementById('phone').value.trim();
+    const product = document.getElementById('product').value;
+    const qty     = parseInt(document.getElementById('qty').value) || 0;
+    const address = document.getElementById('address').value.trim();
+    const note    = document.getElementById('note').value.trim();
+    const price   = PRICE_MAP[product] || 0;
+
+    if (!name || !phone || !product || !address) return showStatus('กรุณากรอกข้อมูลที่มีเครื่องหมาย * ให้ครบ', 'error');
+    if (qty < 1 || qty > 99) return showStatus('จำนวนสินค้าต้องอยู่ระหว่าง 1–99', 'error');
+    
+    const phoneClean = phone.replace(/-/g, '');
+    if (!/^[0-9]{9,10}$/.test(phoneClean)) return showStatus('รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง', 'error');
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>กำลังส่งข้อมูล...';
+
+    const payload = { userId: currentUserId, name, phone: phoneClean, product, qty, price, address, note };
+
+    try {
+      const res = await fetch(GAS_API_URL, {
+        method:  'POST',
+        mode:    'cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body:    JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        document.getElementById('formSection').style.display   = 'none';
+        document.getElementById('successScreen').style.display = 'block';
+        document.getElementById('orderIdDisplay').textContent  = result.orderId;
+        document.getElementById('successDesc').innerHTML       = 'ระบบได้ส่งบิลแจ้งยอดไปที่แชท LINE<br>รบกวนโอนเงินและส่งสลิปในแชทได้เลยค่ะ';
+      } else {
+        showStatus('เกิดข้อผิดพลาด: ' + result.message, 'error');
+        btn.disabled = false; btn.innerHTML = '✅ ยืนยันสั่งซื้อ';
+      }
+    } catch (err) {
+      showStatus('เชื่อมต่อระบบขัดข้อง กรุณาลองใหม่', 'error');
+      btn.disabled = false; btn.innerHTML = '✅ ยืนยันสั่งซื้อ';
+    }
+  }
+
+  function showStatus(msg, type) {
+    const el = document.getElementById('statusMsg');
+    el.textContent = msg;
+    el.className = 'status ' + type;
+    setTimeout(() => { el.className = 'status'; }, 5000);
+  }
+  document.getElementById('submitBtn').addEventListener('click', submitOrder);
+</script>
+</body>
+</html>
