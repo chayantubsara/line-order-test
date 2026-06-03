@@ -3,234 +3,365 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>สั่งซื้อสินค้า</title>
+  <title>ระบบลงทะเบียนคอร์สเรียน</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    :root { --primary: #FF6B35; --primary-dark: #e55a25; --success: #4CAF50; --bg: #f5f5f5; --card: #ffffff; --text: #333333; --gray: #888888; --border: #e0e0e0; --radius: 12px; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); min-height: 100vh; padding: 10px 12px; color: var(--text); font-size: 16px; -webkit-text-size-adjust: 100%; }
-    .wrapper { max-width: 420px; margin: 0 auto; display: none; }
-    #liffLoading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .spinner-large { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
-    .header { background: #FF6B35; border-radius: var(--radius); padding: 20px 16px; text-align: center; margin-bottom: 12px; color: white; }
-    .header h1 { font-size: 18px; margin-bottom: 4px; font-weight: 600; }
-    .header p  { font-size: 12px; opacity: 0.9; }
-    .card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 0.5px solid var(--border); }
-    .card h2 { font-size: 14px; color: var(--primary); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid #fff3ee; font-weight: 600; }
-    .form-group { margin-bottom: 12px; }
-    label { display: block; font-size: 12px; color: var(--gray); margin-bottom: 5px; font-weight: 500; }
-    .required::after { content: ' *'; color: var(--primary); }
-    input, select, textarea { width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 15px; color: var(--text); background: white; -webkit-appearance: none; appearance: none; transition: border-color 0.2s; }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,107,53,0.1); }
-    textarea { resize: vertical; min-height: 72px; }
-    .summary-box { background: #fff8f5; border: 1.5px solid #ffe0d0; border-radius: 10px; padding: 13px; margin-bottom: 12px; }
-    .summary-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; color: var(--gray); }
-    .summary-total { display: flex; justify-content: space-between; font-size: 17px; font-weight: bold; color: var(--primary); padding-top: 8px; border-top: 1px dashed var(--border); margin-top: 5px; }
-    .btn-submit { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-    .btn-submit:active   { background: var(--primary-dark); }
-    .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
-    .status { display: none; padding: 12px; border-radius: 10px; text-align: center; font-size: 14px; margin-top: 10px; }
-    .status.error { display: block; background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
-    .success-screen { display: none; text-align: center; padding: 32px 16px; background: var(--card); border-radius: var(--radius); }
-    .success-screen .icon { font-size: 52px; margin-bottom: 12px; }
-    .success-screen h2 { color: var(--success); margin-bottom: 8px; }
-    .success-screen p  { color: var(--gray); font-size: 14px; margin-bottom: 16px; line-height: 1.5; }
-    .order-id { background: #e8f5e9; color: #2e7d32; padding: 8px 18px; border-radius: 20px; font-size: 16px; font-weight: bold; display: inline-block; margin: 10px 0; }
-    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+    :root {
+      --primary: #2563eb;       /* น้ำเงินอมม่วงดูโปร */
+      --primary-hover: #1d4ed8;
+      --secondary: #f3f4f6;
+      --bg: #f8fafc;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Prompt', 'Segoe UI', Tahoma, sans-serif; }
+    body { background: var(--bg); color: var(--text); line-height: 1.5; -webkit-text-size-adjust: 100%; padding-bottom: 40px; }
+    
+    /* Header */
+    .navbar { background: white; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
+    .navbar h1 { font-size: 18px; font-weight: 700; color: var(--primary); }
+    .user-profile { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+    .user-profile img { width: 32px; height: 32px; border-radius: 50%; display: none; }
+
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    
+    /* Loading States */
+    .loader-screen { position: fixed; inset: 0; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99; }
+    .spinner { width: 40px; height: 40px; border: 4px solid var(--secondary); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Catalog Grid */
+    .section-title { font-size: 20px; font-weight: 700; margin-bottom: 16px; margin-top: 20px; }
+    .catalog { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 30px; }
+    .course-card { background: white; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid #e2e8f0; transition: transform 0.2s; cursor: pointer; }
+    .course-card:active { transform: scale(0.98); }
+    .course-card.selected { border: 2px solid var(--primary); box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
+    .course-img { width: 100%; height: 160px; object-fit: cover; background: #e2e8f0; }
+    .course-content { padding: 16px; }
+    .course-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .course-desc { font-size: 13px; color: var(--text-light); margin-bottom: 12px; }
+    .course-footer { display: flex; justify-content: space-between; align-items: center; }
+    .course-price { font-size: 18px; font-weight: 700; color: var(--primary); }
+    .btn-select { background: var(--secondary); color: var(--text); border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; pointer-events: none; }
+    .course-card.selected .btn-select { background: var(--primary); color: white; }
+
+    /* Checkout Form */
+    #checkoutSection { display: none; background: white; padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow); }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .required::after { content: ' *'; color: var(--danger); }
+    input[type="text"], input[type="tel"], textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; background: #f8fafc; transition: border 0.2s; }
+    input:focus, textarea:focus { outline: none; border-color: var(--primary); background: white; }
+    
+    /* Bank Info & Upload */
+    .payment-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+    .payment-title { font-size: 14px; font-weight: 700; color: #166534; margin-bottom: 10px; }
+    .bank-details { font-size: 14px; line-height: 1.6; color: #15803d; }
+    
+    .upload-area { border: 2px dashed #cbd5e1; border-radius: 8px; padding: 20px; text-align: center; background: #f8fafc; cursor: pointer; position: relative; margin-top: 10px; }
+    .upload-area.has-file { border-color: var(--success); background: #f0fdf4; }
+    .upload-area input[type="file"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    .upload-icon { font-size: 24px; margin-bottom: 8px; }
+    .upload-text { font-size: 14px; color: var(--text-light); }
+    .preview-img { max-width: 100%; max-height: 150px; border-radius: 6px; margin-top: 10px; display: none; }
+
+    .btn-submit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+    .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; }
+    
+    .status-msg { margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 14px; text-align: center; display: none; }
+    .status-msg.error { display: block; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
   </style>
 </head>
 <body>
 
-<div id="liffLoading">
-  <div class="spinner-large"></div>
-  <p id="loadingMsg" style="margin-top:16px; color:#888;">กำลังตรวจสอบระบบ Login...</p>
+<!-- Loading Screen -->
+<div class="loader-screen" id="mainLoader">
+  <div class="spinner"></div>
+  <p style="color: #64748b; font-weight: 500;">กำลังโหลดข้อมูล...</p>
 </div>
 
-<div class="wrapper" id="mainWrapper">
-  <div class="header">
-    <h1>🛒 สั่งซื้อสินค้า</h1>
-    <p>กรอกข้อมูลให้ครบแล้วกดสั่งซื้อได้เลย</p>
+<!-- Navbar -->
+<div class="navbar">
+  <h1>📚 Academy Store</h1>
+  <div class="user-profile" id="userProfile">
+    <span id="userName">ผู้ใช้งานทั่วไป</span>
+    <img id="userImg" src="" alt="Profile">
+  </div>
+</div>
+
+<div class="container" id="appContainer" style="display: none;">
+  
+  <h2 class="section-title">เลือกคอร์สเรียน / สินค้า</h2>
+  <!-- Course Catalog -->
+  <div class="catalog" id="courseCatalog">
+    <!-- รายการจะถูก render ลงที่นี่จาก JavaScript -->
   </div>
 
-  <div id="formSection">
-    <div class="card">
-      <h2>👤 ข้อมูลผู้สั่งซื้อ</h2>
-      <div class="form-group">
-        <label class="required">ชื่อ-นามสกุล</label>
-        <input type="text" id="name" placeholder="กรอกชื่อ-นามสกุล" autocomplete="name" maxlength="100">
+  <!-- Checkout Section -->
+  <div id="checkoutSection">
+    <h2 class="section-title" style="margin-top:0;">ข้อมูลการลงทะเบียน</h2>
+    
+    <div class="form-group">
+      <label class="required">ชื่อ-นามสกุล</label>
+      <input type="text" id="name" placeholder="กรอกชื่อสำหรับออกใบเซอร์" maxlength="100">
+    </div>
+    <div class="form-group">
+      <label class="required">เบอร์โทรศัพท์ (ใส่ตัวเลขติดกัน)</label>
+      <input type="tel" id="phone" placeholder="0812345678" inputmode="numeric" maxlength="10">
+    </div>
+    <div class="form-group">
+      <label>อีเมล / ที่อยู่ (เพื่อรับเอกสาร)</label>
+      <textarea id="address" placeholder="example@email.com หรือ ที่อยู่จัดส่ง" rows="2"></textarea>
+    </div>
+
+    <!-- สรุปยอดและแจ้งโอน -->
+    <div class="payment-box">
+      <div class="payment-title">ยอดที่ต้องชำระ: <span id="summaryPrice" style="font-size: 18px;">0</span> บาท</div>
+      <div class="bank-details">
+        <b>ธนาคาร:</b> กสิกรไทย (KBANK)<br>
+        <b>เลขบัญชี:</b> 083-3-11371-2<br>
+        <b>ชื่อบัญชี:</b> นาย ชยันต์ ทับสระ
       </div>
-      <div class="form-group">
-        <label class="required">เบอร์โทรศัพท์</label>
-        <input type="tel" id="phone" placeholder="0812345678 (ตัวเลข 9-10 หลัก)" autocomplete="tel" inputmode="numeric" maxlength="10">
+      
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">📸</div>
+        <div class="upload-text" id="uploadText">แตะเพื่ออัปโหลดสลิปโอนเงิน<br><small>(ระบบรองรับไฟล์รูปภาพเท่านั้น)</small></div>
+        <img id="slipPreview" class="preview-img">
+        <input type="file" id="slipInput" accept="image/png, image/jpeg, image/jpg">
       </div>
     </div>
 
-    <div class="card">
-      <h2>📦 รายการสินค้า</h2>
-      <div class="form-group">
-        <label class="required">เลือกสินค้า</label>
-        <select id="product">
-          <option value="">-- เลือกสินค้า --</option>
-          <option value="สินค้า A" data-price="299">สินค้า A — 299 บาท</option>
-          <option value="สินค้า B" data-price="499">สินค้า B — 499 บาท</option>
-          <option value="สินค้า C" data-price="799">สินค้า C — 799 บาท</option>
-          <option value="สินค้า D" data-price="1290">สินค้า D — 1,290 บาท</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="required">จำนวน</label>
-        <input type="number" id="qty" value="1" min="1" max="99" inputmode="numeric">
-      </div>
-    </div>
-
-    <div class="summary-box">
-      <div class="summary-row">
-        <span>ราคาต่อชิ้น</span>
-        <span id="unitPrice">0 บาท</span>
-      </div>
-      <div class="summary-row">
-        <span>จำนวน</span>
-        <span id="qtyDisplay">0 ชิ้น</span>
-      </div>
-      <div class="summary-total">
-        <span>ยอดรวม</span>
-        <span id="totalPrice">0 บาท</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>📍 ที่อยู่จัดส่ง</h2>
-      <div class="form-group">
-        <label class="required">ที่อยู่จัดส่ง</label>
-        <textarea id="address" placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์" autocomplete="street-address" maxlength="500"></textarea>
-      </div>
-      <div class="form-group">
-        <label>หมายเหตุ (ถ้ามี)</label>
-        <input type="text" id="note" placeholder="เช่น ฝากไว้หน้าประตู" maxlength="200">
-      </div>
-    </div>
-
-    <button class="btn-submit" id="submitBtn">✅ ยืนยันสั่งซื้อ</button>
-    <div id="statusMsg" class="status"></div>
+    <button class="btn-submit" id="submitBtn">✅ ยืนยันการชำระเงิน</button>
+    <div id="statusMsg" class="status-msg"></div>
   </div>
 
-  <div class="success-screen" id="successScreen">
-    <div class="icon">🎉</div>
-    <h2>สั่งซื้อสำเร็จแล้ว!</h2>
-    <p id="successDesc">เราได้รับออเดอร์ของคุณเรียบร้อยแล้ว</p>
-    <div class="order-id" id="orderIdDisplay"></div>
+  <!-- Success Screen -->
+  <div id="successScreen" style="display: none; text-align: center; padding: 40px 20px; background: white; border-radius: 12px; box-shadow: var(--shadow);">
+    <div style="font-size: 64px; margin-bottom: 16px;">🎉</div>
+    <h2 style="color: var(--success); margin-bottom: 10px;">ลงทะเบียนสำเร็จ!</h2>
+    <p style="color: var(--text-light); margin-bottom: 20px;">เราได้รับสลิปโอนเงินของคุณแล้ว<br>ระบบได้แจ้งเตือนไปที่แอดมินเรียบร้อยค่ะ</p>
+    <div style="background: var(--secondary); padding: 12px; border-radius: 8px; font-weight: bold; color: var(--text);">
+      รหัสอ้างอิง: <span id="orderIdDisplay"></span>
+    </div>
+    <p style="margin-top: 20px; font-size: 14px; color: var(--text-light);">หน้าต่างนี้จะปิดอัตโนมัติ...</p>
   </div>
+
 </div>
 
 <script>
   // ========================================================
-  // ⚠️ 1. เอา Web App URL จาก GAS ที่ Deploy ล่าสุดมาใส่ตรงนี้
+  // ⚠️ 1. เอา Web App URL จาก GAS มาใส่ตรงนี้
   // ========================================================
   const GAS_API_URL = 'https://script.google.com/macros/s/YOUR_WEB_APP_ID/exec'; 
   const LIFF_ID     = '2010267659-SxGeiSVp';
 
-  const PRICE_MAP = {
-    'สินค้า A': 299,
-    'สินค้า B': 499,
-    'สินค้า C': 799,
-    'สินค้า D': 1290,
-  };
-
+  // State
   let currentUserId = '';
+  let itemsData = [];
+  let selectedItem = null;
+  let compressedSlipBase64 = '';
 
-  async function initLIFF() {
+  // 1. Initial Load (LIFF + Fetch Data)
+  async function initializeApp() {
     try {
-      // โหมดบังคับ Login
-      await liff.init({ 
-        liffId: LIFF_ID,
-        withLoginOnExternalBrowser: true 
-      });
+      // โหลดข้อมูลสินค้าคู่ขนานกับการโหลด LIFF เพื่อความรวดเร็ว
+      const [liffInit, itemsResponse] = await Promise.all([
+        liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true }),
+        fetch(GAS_API_URL + '?action=getItems').then(res => res.json())
+      ]);
 
+      // จัดการ Profile
       if (liff.isLoggedIn()) {
         const profile = await liff.getProfile();
         currentUserId = profile.userId;
         document.getElementById('name').value = profile.displayName;
+        document.getElementById('userName').textContent = profile.displayName;
+        document.getElementById('userImg').src = profile.pictureUrl;
+        document.getElementById('userImg').style.display = 'block';
       } else {
         liff.login();
       }
-    } catch (err) {
-      document.getElementById('loadingMsg').innerHTML = "<span style='color:red;'>เชื่อมต่อ LINE ล้มเหลว โปรดตรวจสอบ LIFF ID</span>";
-      console.error(err);
+
+      // จัดการข้อมูลสินค้า
+      if (itemsResponse.success && itemsResponse.data.length > 0) {
+        itemsData = itemsResponse.data;
+        renderCatalog();
+      } else {
+        document.getElementById('courseCatalog').innerHTML = '<p style="text-align:center; padding:20px;">ยังไม่มีรายการสินค้า</p>';
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert('เกิดข้อผิดพลาดในการโหลดระบบ กรุณารีเฟรชหน้าจอ');
     } finally {
-      document.getElementById('liffLoading').style.display = 'none';
-      document.getElementById('mainWrapper').style.display = 'block';
+      document.getElementById('mainLoader').style.display = 'none';
+      document.getElementById('appContainer').style.display = 'block';
     }
   }
 
-  initLIFF();
-
-  function updatePrice() {
-    const select  = document.getElementById('product');
-    const qty     = parseInt(document.getElementById('qty').value) || 0;
-    const product = select.value;
-    const price   = PRICE_MAP[product] || 0;
-    const total   = price * qty;
-    document.getElementById('unitPrice').textContent  = price.toLocaleString() + ' บาท';
-    document.getElementById('qtyDisplay').textContent = qty + ' ชิ้น';
-    document.getElementById('totalPrice').textContent = total.toLocaleString() + ' บาท';
+  // 2. Render Cards
+  function renderCatalog() {
+    const catalogDiv = document.getElementById('courseCatalog');
+    catalogDiv.innerHTML = '';
+    
+    itemsData.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'course-card';
+      card.onclick = () => selectCourse(card, item);
+      
+      card.innerHTML = `
+        <img src="${item.imageUrl}" alt="${item.name}" class="course-img" loading="lazy">
+        <div class="course-content">
+          <div class="course-title">${item.name}</div>
+          <div class="course-desc">${item.description}</div>
+          <div class="course-footer">
+            <div class="course-price">฿${item.price.toLocaleString()}</div>
+            <button class="btn-select">เลือกคอร์สนี้</button>
+          </div>
+        </div>
+      `;
+      catalogDiv.appendChild(card);
+    });
   }
-  document.getElementById('product').addEventListener('change', updatePrice);
-  document.getElementById('qty').addEventListener('input', updatePrice);
 
+  // 3. Handle Selection
+  function selectCourse(cardElement, item) {
+    // Reset old selection
+    document.querySelectorAll('.course-card').forEach(c => c.classList.remove('selected'));
+    // Set new selection
+    cardElement.classList.add('selected');
+    selectedItem = item;
+    
+    // Show checkout and update price
+    const checkoutSection = document.getElementById('checkoutSection');
+    checkoutSection.style.display = 'block';
+    document.getElementById('summaryPrice').textContent = item.price.toLocaleString();
+    
+    // Scroll to checkout smoothly
+    checkoutSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // 4. Handle Slip Upload & Compression (หัวใจสำคัญป้องกันระบบล่ม)
+  document.getElementById('slipInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const uploadArea = document.getElementById('uploadArea');
+    const preview = document.getElementById('slipPreview');
+    const uploadText = document.getElementById('uploadText');
+
+    // โชว์ Loading ก่อนบีบอัด
+    uploadText.innerHTML = '⏳ กำลังประมวลผลรูปภาพ...';
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const img = new Image();
+      img.onload = function() {
+        // บีบอัดภาพด้วย Canvas (ลดขนาดรูปที่ใหญ่เกินไป)
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800; // ความกว้างสูงสุด
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // แปลงกลับเป็น Base64 แบบ JPEG Quality 70%
+        compressedSlipBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+        // อัปเดต UI
+        preview.src = compressedSlipBase64;
+        preview.style.display = 'inline-block';
+        uploadText.style.display = 'none';
+        uploadArea.classList.add('has-file');
+      }
+      img.src = event.target.result;
+    }
+    reader.readAsDataURL(file);
+  });
+
+  // 5. Submit Order
   async function submitOrder() {
+    if (!selectedItem) return;
+
     const name    = document.getElementById('name').value.trim();
     const phone   = document.getElementById('phone').value.trim();
-    const product = document.getElementById('product').value;
-    const qty     = parseInt(document.getElementById('qty').value) || 0;
     const address = document.getElementById('address').value.trim();
-    const note    = document.getElementById('note').value.trim();
-    const price   = PRICE_MAP[product] || 0;
 
-    if (!name || !phone || !product || !address) return showStatus('กรุณากรอกข้อมูลที่มีเครื่องหมาย * ให้ครบ', 'error');
-    if (qty < 1 || qty > 99) return showStatus('จำนวนสินค้าต้องอยู่ระหว่าง 1–99', 'error');
+    // Validation
+    if (!name || !phone) return showStatus('กรุณากรอก ชื่อ และ เบอร์โทรศัพท์ ให้ครบถ้วน', 'error');
+    if (!compressedSlipBase64) return showStatus('กรุณาแนบสลิปโอนเงินก่อนยืนยัน', 'error');
     
     const phoneClean = phone.replace(/-/g, '');
-    if (!/^[0-9]{9,10}$/.test(phoneClean)) return showStatus('รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง', 'error');
+    if (!/^[0-9]{9,10}$/.test(phoneClean)) return showStatus('เบอร์โทรศัพท์ต้องเป็นตัวเลข 9-10 หลัก', 'error');
 
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>กำลังส่งข้อมูล...';
+    btn.innerHTML = 'กำลังประมวลผล กรุณารอสักครู่...';
 
-    const payload = { userId: currentUserId, name, phone: phoneClean, product, qty, price, address, note };
+    // จัดเตรียม Payload
+    const payload = {
+      userId: currentUserId,
+      name: name,
+      phone: phoneClean,
+      product: selectedItem.name,
+      price: selectedItem.price,
+      address: address,
+      slipBase64: compressedSlipBase64
+    };
 
     try {
       const res = await fetch(GAS_API_URL, {
         method:  'POST',
         mode:    'cors',
-        headers: { 'Content-Type': 'text/plain' },
+        headers: { 'Content-Type': 'text/plain' }, // ใช้ text/plain เลี่ยง CORS
         body:    JSON.stringify(payload)
       });
 
       const result = await res.json();
 
       if (result.success) {
-        document.getElementById('formSection').style.display   = 'none';
+        document.getElementById('courseCatalog').style.display = 'none';
+        document.getElementById('checkoutSection').style.display = 'none';
+        document.querySelector('.section-title').style.display = 'none';
+        
         document.getElementById('successScreen').style.display = 'block';
-        document.getElementById('orderIdDisplay').textContent  = result.orderId;
-        document.getElementById('successDesc').innerHTML       = 'ระบบได้ส่งบิลแจ้งยอดไปที่แชท LINE<br>รบกวนโอนเงินและส่งสลิปในแชทได้เลยค่ะ';
+        document.getElementById('orderIdDisplay').textContent = result.orderId;
+        
+        // ปิด LIFF อัตโนมัติหลังทำรายการเสร็จ
+        setTimeout(() => { if (liff.isInClient()) { liff.closeWindow(); } }, 4000);
       } else {
         showStatus('เกิดข้อผิดพลาด: ' + result.message, 'error');
-        btn.disabled = false; btn.innerHTML = '✅ ยืนยันสั่งซื้อ';
+        btn.disabled = false; btn.innerHTML = '✅ ยืนยันการชำระเงิน';
       }
     } catch (err) {
       showStatus('เชื่อมต่อระบบขัดข้อง กรุณาลองใหม่', 'error');
-      btn.disabled = false; btn.innerHTML = '✅ ยืนยันสั่งซื้อ';
+      btn.disabled = false; btn.innerHTML = '✅ ยืนยันการชำระเงิน';
     }
   }
 
   function showStatus(msg, type) {
     const el = document.getElementById('statusMsg');
     el.textContent = msg;
-    el.className = 'status ' + type;
-    setTimeout(() => { el.className = 'status'; }, 5000);
+    el.className = 'status-msg ' + type;
+    setTimeout(() => { el.className = 'status-msg'; }, 5000);
   }
+
   document.getElementById('submitBtn').addEventListener('click', submitOrder);
+  
+  // Start Application
+  window.onload = initializeApp;
 </script>
 </body>
 </html>
